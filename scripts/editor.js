@@ -2,20 +2,28 @@
 
 const editArea = document.querySelector("div.edit-area");
 
-const toggleTag = (replaceTag, defaultTag = "DIV") => {
+const toggleHeader = (level) => {
+  const headerTag = `H${level}`;
+  const className = `header${level}-text`;
   const currentTag = document.getSelection().focusNode.parentNode.nodeName;
-  const tag = replaceTag === currentTag ? defaultTag : replaceTag;
-  document.execCommand("formatBlock", false, tag);
+
+  if (headerTag === currentTag) {
+    document.execCommand("formatBlock", false, "DIV");
+  } else {
+    document.execCommand("formatBlock", false, headerTag);
+    document.getSelection().focusNode.parentNode.className = className;
+  }
+
   editArea.focus();
 };
 
 const h1Button = document.querySelector("button.head-1");
-h1Button.addEventListener("click", () => toggleTag("H1"));
+h1Button.addEventListener("click", () => toggleHeader(1));
 
 const h2Button = document.querySelector("button.head-2");
-h2Button.addEventListener("click", () => toggleTag("H2"));
+h2Button.addEventListener("click", () => toggleHeader(2));
 
-const toggleTextStyle = (textStyle) => {
+const toggleTextStyle = (textStyle, className) => {
   document.execCommand(textStyle, false);
   editArea.focus();
 };
