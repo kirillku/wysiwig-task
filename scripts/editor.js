@@ -4,6 +4,7 @@ const editArea = document.querySelector("div.edit-area");
 
 const tagStyles = {};
 
+// Calculate computed styles and set them inline to allow copying text with markup to MS Word Online.
 const applyClassNameAndStyles = (node, className) => {
   const style = tagStyles[node.nodeName];
 
@@ -19,7 +20,6 @@ const applyClassNameAndStyles = (node, className) => {
       .filter((chunk, i) => chunk !== defaultStyleChunks[i])
       .join(";");
     tagStyles[node.nodeName] = computedStyle;
-    console.log(node.style.cssText);
     node.style = [computedStyle, node.style.cssText].join(";");
   }
 };
@@ -35,8 +35,6 @@ const toggleHeader = (level) => {
     editArea.focus();
     focusNode = window.getSelection().focusNode;
   }
-
-  console.log(focusNode.className === "edit-area", focusNode.innerText === "\n");
 
   // Insert empty header when applied to to edit area itself.
   if (focusNode.className === "edit-area") {
@@ -60,7 +58,6 @@ const toggleHeader = (level) => {
     document.execCommand("formatBlock", false, headerTag);
     const newNode = window.getSelection().focusNode.parentNode;
     applyClassNameAndStyles(newNode, className);
-    console.log(newNode, focusNode);
     newNode.innerHTML = "";
 
     editArea.focus();
@@ -72,8 +69,8 @@ const toggleHeader = (level) => {
   if (headerTag === currentTag) {
     document.execCommand("formatBlock", false, "DIV");
     const newNode = window.getSelection().focusNode.parentNode;
-    newNode.className = undefined;
-    newNode.style = undefined;
+    newNode.removeAttribute("className");
+    newNode.removeAttribute("style");
   } else {
     document.execCommand("formatBlock", false, headerTag);
     const newNode = window.getSelection().focusNode.parentNode;
