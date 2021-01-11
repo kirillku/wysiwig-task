@@ -81,3 +81,22 @@ boldButton.addEventListener("click", () => toggleTextStyle("bold"));
 
 const italicButton = document.querySelector("button.italic");
 italicButton.addEventListener("click", () => toggleTextStyle("italic"));
+
+editArea.addEventListener("paste", (event) => {
+  event.preventDefault();
+
+  const html = event.clipboardData.getData("text/html");
+
+  if (!html) {
+    const text = event.clipboardData.getData("text/plain");
+    document.execCommand("insertHTML", false, text);
+    return;
+  }
+
+  const text = event.clipboardData
+    .getData("text/html")
+    // Remove dangerous tags, urls in css, event handlers.
+    .replace(/(<(script|img|iframe|object|embed|animate).*?>)|(url\(.+?\))|( on\w+?=)/gi, "");
+
+  document.execCommand("insertHTML", false, text);
+});
