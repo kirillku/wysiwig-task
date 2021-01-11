@@ -19,7 +19,8 @@ const applyClassNameAndStyles = (node, className) => {
       .filter((chunk, i) => chunk !== defaultStyleChunks[i])
       .join(";");
     tagStyles[node.nodeName] = computedStyle;
-    node.style = computedStyle;
+    console.log(node.style.cssText);
+    node.style = [computedStyle, node.style.cssText].join(";");
   }
 };
 
@@ -35,15 +36,32 @@ const toggleHeader = (level) => {
     focusNode = window.getSelection().focusNode;
   }
 
-  // Insert empty header when applied to to edit area itself or to an empty line.
-  if (focusNode.className === "edit-area" || focusNode.innerText === "\n") {
+  console.log(focusNode.className === "edit-area", focusNode.innerText === "\n");
+
+  // Insert empty header when applied to to edit area itself.
+  if (focusNode.className === "edit-area") {
     document.execCommand(
       "insertHTML",
       false,
       // Style fix to enable cursor.
       `<${headerTag} style="display:block;min-height:1px"></${headerTag}>`
     );
-    applyClassNameAndStyles(window.getSelection().focusNode, className);
+    const newNode = window.getSelection().focusNode;
+    applyClassNameAndStyles(newNode, className);
+
+    editArea.focus();
+    return;
+  }
+
+  // Insert empty header when applied to an empty line.
+  if (focusNode.innerText === "\n") {
+    // Need to add some content to make `formatBlock` work properly.
+    focusNode.innerHTML = "_";
+    document.execCommand("formatBlock", false, headerTag);
+    const newNode = window.getSelection().focusNode.parentNode;
+    applyClassNameAndStyles(newNode, className);
+    console.log(newNode, focusNode);
+    newNode.innerHTML = "";
 
     editArea.focus();
     return;
