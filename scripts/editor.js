@@ -89,10 +89,59 @@ editArea.addEventListener("paste", (event) => {
     return;
   }
 
-  const text = event.clipboardData
-    .getData("text/html")
-    // Remove dangerous tags, urls in css, event handlers.
-    .replace(/(<(script|img|iframe|object|embed|animate).*?>)|(url\(.+?\))|( on\w+?=)/gi, "");
+  const domParser = new DOMParser();
+  const body = domParser
+    .parseFromString(event.clipboardData.getData("text/html"), "text/html")
+    .querySelector("body");
 
-  document.execCommand("insertHTML", false, text);
+  function clearElement(element) {
+    switch (true) {
+      case element.nodeName === "#text":
+        return;
+      case element.nodeName === "H1": {
+        const header = document.createElement("H1");
+        header.innerHTML = element.innerHTML;
+        applyClassNameAndStyles(header, "header1-text");
+        element.replaceWith(header);
+        header.childNodes.forEach(clearElement);
+        return;
+      }
+      case /H[2-6]/.test(element.nodeName): {
+        const header = document.createElement("H2");
+        header.innerHTML = element.innerHTML;
+        applyClassNameAndStyles(header, "header2-text");
+        element.replaceWith(header);
+        header.childNodes.forEach(clearElement);
+        return;
+      }
+      case element.nodeName === "I" || element.style.fontStyle === "italic": {
+        const italic = document.createElement("I");
+        italic.innerHTML = element.innerHTML;
+        element.replaceWith(italic);
+        italic.childNodes.forEach(clearElement);
+        return;
+      }
+      case ["B", "STRONG"].includes(element.nodeName) || element.style.fontWeight === "bold": {
+        const bold = document.createElement("B");
+        bold.innerHTML = element.innerHTML;
+        element.replaceWith(bold);
+        bold.childNodes.forEach(clearElement);
+        return;
+      }
+      case ["DIV", "SPAN", "P"].includes(element.nodeName): {
+        const newElement = document.createElement(element.nodeName);
+        newElement.innerHTML = element.innerHTML;
+        element.replaceWith(newElement);
+        newElement.childNodes.forEach(clearElement);
+        return;
+      }
+      default:
+        element.remove();
+        return;
+    }
+  }
+
+  body.childNodes.forEach(clearElement);
+
+  document.execCommand("insertHTML", false, body.innerHTML);
 });
