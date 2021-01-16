@@ -24,67 +24,48 @@ const applyClassNameAndStyles = (node, className) => {
   }
 };
 
-const toggleHeader = (level) => {
+const applyHeader = (level) => {
   const headerTag = `H${level}`;
   const className = `header${level}-text`;
 
   let focusNode = window.getSelection().focusNode;
 
-  // Return focus to editArea if it is not focused.
-  if (!focusNode || !editArea.contains(focusNode)) {
-    editArea.focus();
-    focusNode = window.getSelection().focusNode;
-  }
-
-  // Insert empty header when applied to to edit area itself.
-  if (focusNode.className === "edit-area") {
-    document.execCommand(
-      "insertHTML",
-      false,
-      // Style fix to enable cursor.
-      `<${headerTag} style="display:block;min-height:1px"></${headerTag}>`
-    );
-    const newNode = window.getSelection().focusNode;
-    applyClassNameAndStyles(newNode, className);
-
+  // Only apply header when there is a selection in the editor.
+  if (
+    !focusNode ||
+    !editArea.contains(focusNode) ||
+    focusNode.className === "edit-area" ||
+    focusNode.innerText === "\n"
+  ) {
     editArea.focus();
     return;
   }
 
-  // Insert empty header when applied to an empty line.
-  if (focusNode.innerText === "\n") {
-    // Need to add some content to make `formatBlock` work properly.
-    focusNode.innerHTML = "_";
-    document.execCommand("formatBlock", false, headerTag);
-    const newNode = window.getSelection().focusNode.parentNode;
-    applyClassNameAndStyles(newNode, className);
-    newNode.innerHTML = "";
-
-    editArea.focus();
-    return;
-  }
-
-  const currentTag = focusNode.parentNode.nodeName;
-
-  if (headerTag === currentTag) {
-    document.execCommand("formatBlock", false, "DIV");
-    const newNode = window.getSelection().focusNode.parentNode;
-    newNode.removeAttribute("className");
-    newNode.removeAttribute("style");
-  } else {
-    document.execCommand("formatBlock", false, headerTag);
-    const newNode = window.getSelection().focusNode.parentNode;
-    applyClassNameAndStyles(newNode, className);
+  try {
+    // Try to apply header inline.
+    const range = window.getSelection().getRangeAt(0);
+    const header = document.createElement(headerTag);
+    range.surroundContents(header);
+    applyClassNameAndStyles(header, className);
+  } catch {
+    // If range includes a non-text node, apply temp tag and then convert to header.
+    document.execCommand("fontName", false, "temp");
+    editArea.querySelectorAll("font").forEach((element) => {
+      const header = document.createElement(headerTag);
+      header.innerHTML = element.innerHTML;
+      element.replaceWith(header);
+      applyClassNameAndStyles(header, className);
+    });
   }
 
   editArea.focus();
 };
 
 const h1Button = document.querySelector("button.head-1");
-h1Button.addEventListener("click", () => toggleHeader(1));
+h1Button.addEventListener("click", () => applyHeader(1));
 
 const h2Button = document.querySelector("button.head-2");
-h2Button.addEventListener("click", () => toggleHeader(2));
+h2Button.addEventListener("click", () => applyHeader(2));
 
 const toggleTextStyle = (textStyle, className) => {
   document.execCommand(textStyle, false);
