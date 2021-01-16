@@ -121,7 +121,8 @@ editArea.addEventListener("paste", (event) => {
         italic.childNodes.forEach(clearElement);
         return;
       }
-      case ["B", "STRONG"].includes(element.nodeName) || element.style.fontWeight === "bold": {
+      case ["B", "STRONG"].includes(element.nodeName) ||
+        ["bold", "700"].includes(element.style.fontWeight): {
         const bold = document.createElement("B");
         bold.innerHTML = element.innerHTML;
         element.replaceWith(bold);
