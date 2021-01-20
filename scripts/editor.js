@@ -78,6 +78,16 @@ boldButton.addEventListener("click", () => toggleTextStyle("bold"));
 const italicButton = document.querySelector("button.italic");
 italicButton.addEventListener("click", () => toggleTextStyle("italic"));
 
+const replaceElement = (element, newTag) => {
+  const newElement = document.createElement(newTag);
+  newElement.innerHTML = element.innerHTML;
+  element.replaceWith(newElement);
+  return newElement;
+};
+
+// When using `node.childNodes` straight, some nodes could be skipped if others are removed.
+const getChildNodes = (node) => [...node.childNodes];
+
 editArea.addEventListener("paste", (event) => {
   event.preventDefault();
 
@@ -99,41 +109,31 @@ editArea.addEventListener("paste", (event) => {
       case element.nodeName === "#text":
         return;
       case element.nodeName === "H1": {
-        const header = document.createElement("H1");
-        header.innerHTML = element.innerHTML;
+        const header = replaceElement(element, "H1");
         applyClassNameAndStyles(header, "header1-text");
-        element.replaceWith(header);
-        header.childNodes.forEach(clearElement);
+        getChildNodes(header).forEach(clearElement);
         return;
       }
       case /H[2-6]/.test(element.nodeName): {
-        const header = document.createElement("H2");
-        header.innerHTML = element.innerHTML;
+        const header = replaceElement(element, "H2");
         applyClassNameAndStyles(header, "header2-text");
-        element.replaceWith(header);
-        header.childNodes.forEach(clearElement);
+        getChildNodes(header).forEach(clearElement);
         return;
       }
       case element.nodeName === "I" || element.style.fontStyle === "italic": {
-        const italic = document.createElement("I");
-        italic.innerHTML = element.innerHTML;
-        element.replaceWith(italic);
-        italic.childNodes.forEach(clearElement);
+        const italic = replaceElement(element, "I");
+        getChildNodes(italic).forEach(clearElement);
         return;
       }
       case ["B", "STRONG"].includes(element.nodeName) ||
         ["bold", "700"].includes(element.style.fontWeight): {
-        const bold = document.createElement("B");
-        bold.innerHTML = element.innerHTML;
-        element.replaceWith(bold);
-        bold.childNodes.forEach(clearElement);
+        const bold = replaceElement(element, "B");
+        getChildNodes(bold).forEach(clearElement);
         return;
       }
       case ["DIV", "SPAN", "P"].includes(element.nodeName): {
-        const newElement = document.createElement(element.nodeName);
-        newElement.innerHTML = element.innerHTML;
-        element.replaceWith(newElement);
-        newElement.childNodes.forEach(clearElement);
+        const newElement = replaceElement(element, element.nodeName);
+        getChildNodes(newElement).forEach(clearElement);
         return;
       }
       default:
@@ -142,7 +142,13 @@ editArea.addEventListener("paste", (event) => {
     }
   }
 
-  body.childNodes.forEach(clearElement);
+  getChildNodes(body).forEach(clearElement);
 
-  document.execCommand("insertHTML", false, body.innerHTML);
+  const fragment = document.createDocumentFragment();
+  getChildNodes(body).forEach((node) => fragment.appendChild(node));
+
+  const range = window.getSelection().getRangeAt(0);
+  range.deleteContents();
+  range.insertNode(fragment);
+  range.collapse();
 });
