@@ -95,7 +95,14 @@ editArea.addEventListener("paste", (event) => {
 
   if (!html) {
     const text = event.clipboardData.getData("text/plain");
-    document.execCommand("insertHTML", false, text);
+
+    const textNode = document.createTextNode(text);
+
+    const range = window.getSelection().getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(textNode);
+    range.collapse();
+
     return;
   }
 
